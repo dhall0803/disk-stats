@@ -8,6 +8,8 @@ from os import system
 sda_regex = re.compile("^sd[A-Za-z]$")
 #Matches disks that start with nvme then any letter, the letter n then a number. Doesn't match partitions.
 nvme_regex = re.compile("^nvme[\\d]{1}n[\\d]{1}$")
+#Matches disks that start with mmcblk then a number
+mmc_regex = re.compile("^mmc[\\d]{1}")
 
 
 #Select whether you want info on disks or partitions
@@ -16,6 +18,8 @@ mode = "disk"
 def clear_screen():
     system('clear')
 
+#Get the latest rw counts for the disks in your system.
+#Setting all to True will include partitions as well
 def refresh_disk_stats(all=False):
     #Dict containing the data about the disks we are interested in
     disk_data = {}
@@ -27,9 +31,9 @@ def refresh_disk_stats(all=False):
             if "loop" not in k and "dm-" not in k and "zram" not in k:
                 disk_data[k] = {"bytes_read" : v.read_bytes, "bytes_written": v.write_bytes}
     else:
-        #Loop through blob and pull out the data we are interested
+        #Loop through blob and pull out the data for just disks
         for k,v in blob.items():
-            if sda_regex.match(k) or nvme_regex.match(k):
+            if sda_regex.match(k) or nvme_regex.match(k) or mmc_regex.match(k):
                 disk_data[k] = {"bytes_read" : v.read_bytes, "bytes_written": v.write_bytes}
 
     
